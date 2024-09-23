@@ -1,4 +1,4 @@
-import { globalCss } from "@pattern-lab-ui/react";
+import { globalCss } from '@pattern-lab-ui/react'
 
 export const globalStyles = globalCss({
   '*': {
