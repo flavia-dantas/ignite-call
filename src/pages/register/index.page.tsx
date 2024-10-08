@@ -6,6 +6,7 @@ import {
   Text,
   TextInput,
 } from '@pattern-lab-ui/react'
+import { AxiosError } from 'axios'
 import { ArrowRight } from 'lucide-react'
 import { useRouter } from 'next/router'
 import { useEffect } from 'react'
@@ -53,7 +54,12 @@ export default function Register() {
         name: data.name,
         username: data.username,
       })
+      await router.push('/register/connect-calendar')
     } catch (err) {
+      if (err instanceof AxiosError && err?.response?.data?.message) {
+        alert(err.response.data.message)
+        return
+      }
       console.log(err)
     }
   }
