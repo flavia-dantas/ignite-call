@@ -1,33 +1,20 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { Adapter } from 'next-auth/adapters'
+import { Adapter, AdapterUser } from 'next-auth/adapters'
 import { destroyCookie, parseCookies } from 'nookies'
 import { prisma } from '../prisma'
-
-type Account = {
-  userId: string
-  type: string
-  provider: string
-  providerAccountId: string
-  refresh_token?: string
-  access_token?: string
-  expires_at?: number
-  token_type?: string
-  scope?: string
-  id_token?: string
-  session_state?: string
-}
-
-type User = { name: string; email: string; avatar_url: string }
 
 export function PrismaAdapter(
   req: NextApiRequest,
   res: NextApiResponse,
 ): Adapter {
   return {
-    async createUser(user: User) {
-      const { '@ignitecall:userId': userIdOnCookies } = parseCookies({ req })
+    async createUser(user: AdapterUser) {
+      // Aceitar AdapterUser completo
+      const cookies = parseCookies({ req })
+      const userIdOnCookies = cookies['@ignitecall:userId']
 
       if (!userIdOnCookies) {
+        console.error('User ID not found on cookies.')
         throw new Error('User ID not found on cookies.')
       }
 
@@ -37,11 +24,12 @@ export function PrismaAdapter(
         },
         data: {
           name: user.name,
-          email: user.email,
-          avatar_url: user.avatar_url,
+          email: user.email || '', // Garantir que email seja string
+          avatar_url: user.image || '', // Acessa o campo image do NextAuth profile
         },
       })
 
+      // Remover o cookie userId após o uso
       destroyCookie({ res }, '@ignitecall:userId', {
         path: '/',
       })
@@ -49,10 +37,9 @@ export function PrismaAdapter(
       return {
         id: prismaUser.id,
         name: prismaUser.name,
-        username: prismaUser.username,
-        email: prismaUser.email!,
+        email: prismaUser.email || '', // Garantir que email nunca seja null
         emailVerified: null,
-        avatar_url: prismaUser.avatar_url!,
+        avatar_url: prismaUser.avatar_url || null, // avatar_url pode ser null
       }
     },
 
@@ -76,6 +63,7 @@ export function PrismaAdapter(
         avatar_url: user.avatar_url!,
       }
     },
+
     async getUserByEmail(email) {
       const user = await prisma.user.findUnique({
         where: {
@@ -96,6 +84,7 @@ export function PrismaAdapter(
         avatar_url: user.avatar_url!,
       }
     },
+
     async getUserByAccount({ providerAccountId, provider }) {
       const account = await prisma.account.findUnique({
         where: {
@@ -147,20 +136,32 @@ export function PrismaAdapter(
       }
     },
 
-    async linkAccount(account: Account) {
+    async linkAccount(account: {
+      userId: string
+      type: string
+      provider: string
+      providerAccountId: string
+      refresh_token?: string | null
+      access_token?: string | null
+      expires_at?: number | null
+      token_type?: string | null
+      scope?: string | null
+      id_token?: string | null
+      session_state?: string | null
+    }) {
       await prisma.account.create({
         data: {
           user_id: account.userId,
           type: account.type,
           provider: account.provider,
           provider_account_id: account.providerAccountId,
-          refresh_token: account.refresh_token,
-          access_token: account.access_token,
-          expires_at: account.expires_at,
-          token_type: account.token_type,
-          scope: account.scope,
-          id_token: account.id_token,
-          session_state: account.session_state,
+          refresh_token: account.refresh_token || null,
+          access_token: account.access_token || null,
+          expires_at: account.expires_at || null,
+          token_type: account.token_type || null,
+          scope: account.scope || null,
+          id_token: account.id_token || null,
+          session_state: account.session_state || null,
         },
       })
     },
@@ -220,8 +221,8 @@ export function PrismaAdapter(
           session_token: sessionToken,
         },
         data: {
-          expires,
           user_id: userId,
+          expires,
         },
       })
 
