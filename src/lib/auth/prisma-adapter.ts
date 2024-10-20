@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { Adapter, AdapterUser } from 'next-auth/adapters'
+import { Adapter } from 'next-auth/adapters'
 import { destroyCookie, parseCookies } from 'nookies'
 import { prisma } from '../prisma'
 
@@ -8,13 +8,10 @@ export function PrismaAdapter(
   res: NextApiResponse,
 ): Adapter {
   return {
-    async createUser(user: AdapterUser) {
-      // Aceitar AdapterUser completo
-      const cookies = parseCookies({ req })
-      const userIdOnCookies = cookies['@ignitecall:userId']
+    async createUser(user) {
+      const { '@ignitecall:userId': userIdOnCookies } = parseCookies({ req })
 
       if (!userIdOnCookies) {
-        console.error('User ID not found on cookies.')
         throw new Error('User ID not found on cookies.')
       }
 
@@ -24,12 +21,11 @@ export function PrismaAdapter(
         },
         data: {
           name: user.name,
-          email: user.email || '', // Garantir que email seja string
-          avatar_url: user.image || '', // Acessa o campo image do NextAuth profile
+          email: user.email,
+          avatar_url: user.avatar_url,
         },
       })
 
-      // Remover o cookie userId após o uso
       destroyCookie({ res }, '@ignitecall:userId', {
         path: '/',
       })
@@ -37,9 +33,10 @@ export function PrismaAdapter(
       return {
         id: prismaUser.id,
         name: prismaUser.name,
-        email: prismaUser.email || '', // Garantir que email nunca seja null
+        username: prismaUser.username,
+        email: prismaUser.email!,
         emailVerified: null,
-        avatar_url: prismaUser.avatar_url || null, // avatar_url pode ser null
+        avatar_url: prismaUser.avatar_url!,
       }
     },
 
@@ -63,7 +60,6 @@ export function PrismaAdapter(
         avatar_url: user.avatar_url!,
       }
     },
-
     async getUserByEmail(email) {
       const user = await prisma.user.findUnique({
         where: {
@@ -84,7 +80,6 @@ export function PrismaAdapter(
         avatar_url: user.avatar_url!,
       }
     },
-
     async getUserByAccount({ providerAccountId, provider }) {
       const account = await prisma.account.findUnique({
         where: {
@@ -136,32 +131,20 @@ export function PrismaAdapter(
       }
     },
 
-    async linkAccount(account: {
-      userId: string
-      type: string
-      provider: string
-      providerAccountId: string
-      refresh_token?: string | null
-      access_token?: string | null
-      expires_at?: number | null
-      token_type?: string | null
-      scope?: string | null
-      id_token?: string | null
-      session_state?: string | null
-    }) {
+    async linkAccount(account) {
       await prisma.account.create({
         data: {
           user_id: account.userId,
           type: account.type,
           provider: account.provider,
           provider_account_id: account.providerAccountId,
-          refresh_token: account.refresh_token || null,
-          access_token: account.access_token || null,
-          expires_at: account.expires_at || null,
-          token_type: account.token_type || null,
-          scope: account.scope || null,
-          id_token: account.id_token || null,
-          session_state: account.session_state || null,
+          refresh_token: account.refresh_token,
+          access_token: account.access_token,
+          expires_at: account.expires_at,
+          token_type: account.token_type,
+          scope: account.scope,
+          id_token: account.id_token,
+          session_state: account.session_state,
         },
       })
     },
@@ -221,8 +204,8 @@ export function PrismaAdapter(
           session_token: sessionToken,
         },
         data: {
-          user_id: userId,
           expires,
+          user_id: userId,
         },
       })
 
