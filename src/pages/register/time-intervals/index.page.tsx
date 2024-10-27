@@ -10,6 +10,7 @@ import {
   TextInput,
 } from '@pattern-lab-ui/react'
 import { ArrowRight } from 'lucide-react'
+import { useRouter } from 'next/router'
 import { Controller, useFieldArray, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { api } from "../../../lib/axios"
@@ -87,6 +88,8 @@ export default function TimeIntervals() {
     },
   })
 
+  const router = useRouter()
+
   const weekDays = getWeekDays()
 
   const { fields } = useFieldArray({
@@ -102,6 +105,8 @@ export default function TimeIntervals() {
     await api.post('/users/time-intervals', {
       intervals,
     })
+
+    await router.push('/register/update-profile')
   }
 
   return (
