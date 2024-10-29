@@ -8,14 +8,17 @@ import {
   CalendarHeader,
   CalendarTitle,
 } from './styles'
+
 export function Calendar() {
   const shortWeekDays = getWeekDays({ short: true })
+
   return (
     <CalendarContainer>
       <CalendarHeader>
         <CalendarTitle>
           Dezembro <span>2022</span>
         </CalendarTitle>
+
         <CalendarActions>
           <button>
             <CaretLeft />
@@ -25,6 +28,7 @@ export function Calendar() {
           </button>
         </CalendarActions>
       </CalendarHeader>
+
       <CalendarBody>
         <thead>
           <tr>
@@ -43,7 +47,30 @@ export function Calendar() {
               <CalendarDay>1</CalendarDay>
             </td>
             <td>
-              <CalendarDay>2</CalendarDay>
+              <CalendarDay disabled>2</CalendarDay>
+            </td>
+            <td>
+              <CalendarDay>3</CalendarDay>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <CalendarDay>1</CalendarDay>
+            </td>
+            <td>
+              <CalendarDay>1</CalendarDay>
+            </td>
+            <td>
+              <CalendarDay>1</CalendarDay>
+            </td>
+            <td>
+              <CalendarDay>1</CalendarDay>
+            </td>
+            <td>
+              <CalendarDay>1</CalendarDay>
+            </td>
+            <td>
+              <CalendarDay disabled>2</CalendarDay>
             </td>
             <td>
               <CalendarDay>3</CalendarDay>
