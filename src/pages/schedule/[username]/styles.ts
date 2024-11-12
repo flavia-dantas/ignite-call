@@ -1,4 +1,5 @@
 import { Heading, styled, Text } from '@pattern-lab-ui/react'
+
 export const Container = styled('div', {
   maxWidth: 852,
   padding: '0 $4',
