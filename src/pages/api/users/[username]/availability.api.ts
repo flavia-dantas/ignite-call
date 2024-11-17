@@ -1,6 +1,7 @@
 import dayjs from 'dayjs'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../../lib/prisma'
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -47,7 +48,6 @@ export default async function handler(
   const { time_start_in_minutes, time_end_in_minutes } = userAvailability
 
   const startHour = time_start_in_minutes / 60
-
   const endHour = time_end_in_minutes / 60
 
   const possibleTimes = Array.from({ length: endHour - startHour }).map(
@@ -68,10 +68,15 @@ export default async function handler(
       },
     },
   })
+
   const availableTimes = possibleTimes.filter((time) => {
-    return !blockedTimes.some(
+    const isTimeBlocked = blockedTimes.some(
       (blockedTime) => blockedTime.date.getHours() === time,
     )
+
+    const isTimeInPast = referenceDate.set('hour', time).isBefore(new Date())
+
+    return !isTimeBlocked && !isTimeInPast
   })
 
   return res.json({ possibleTimes, availableTimes })
